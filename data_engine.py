@@ -1,6 +1,6 @@
 import akshare as ak
 import pandas as pd
-import pandas_ta as ta  # 切换到兼容性更好的 pandas_ta
+import pandas_ta as ta
 from datetime import datetime
 
 class DataEngine:
@@ -23,23 +23,31 @@ class DataEngine:
 
     def add_technical_factors(self, df):
         if df is None or df.empty: return df
-        # 使用 pandas_ta 计算指标，这些指标与 TA-Lib 完全一致
+        
+        # 基础指标
         df['MA5'] = ta.sma(df['close'], length=5)
         df['MA20'] = ta.sma(df['close'], length=20)
         df['MA60'] = ta.sma(df['close'], length=60)
         df['RSI'] = ta.rsi(df['close'], length=14)
         
+        # MACD 处理
         macd = ta.macd(df['close'])
-        df['MACD'] = macd['MACD_12_26_9']
-        df['MACD_signal'] = macd['MACDs_12_26_9']
-        df['MACD_hist'] = macd['MACDh_12_26_9']
+        if macd is not None:
+            df['MACD'] = macd.iloc[:, 0]  # 取第一列
+            df['MACD_signal'] = macd.iloc[:, 2]  # 取第三列
+            df['MACD_hist'] = macd.iloc[:, 1]  # 取第二列
         
+        # ATR 处理
         df['ATR'] = ta.atr(df['high'], df['low'], df['close'], length=14)
         
+        # 布林带处理 (修复 KeyError 的核心逻辑)
         bbands = ta.bbands(df['close'], length=20, std=2)
-        df['BB_upper'] = bbands['BBU_20_2.0']
-        df['BB_middle'] = bbands['BBM_20_2.0']
-        df['BB_lower'] = bbands['BBL_20_2.0']
+        if bbands is not None:
+            # 使用 iloc 索引而不是字符串列名，彻底避免 KeyError
+            df['BB_lower'] = bbands.iloc[:, 0]   # Lower Band
+            df['BB_middle'] = bbands.iloc[:, 1]  # Mid Band
+            df['BB_upper'] = bbands.iloc[:, 2]   # Upper Band
+            
         return df
 
     def get_market_snapshot(self):
