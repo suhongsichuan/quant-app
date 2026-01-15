@@ -1,0 +1,12 @@
+akshare
+vectorbt
+streamlit
+plotly
+polars
+requests
+beautifulsoup4
+ta-lib
+pandas==2.1.4
+numpy
+scipy
+pandas-ta # 尽管安装失败，但为了完整性，最好加上，让用户自行处理或在云端尝试安装
